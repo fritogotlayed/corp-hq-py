@@ -1,0 +1,43 @@
+version: '2'
+services:
+    corp-hq-ui:
+        build: ./ui
+        container_name: "corp-hq-ui"
+        image: corp-hq-ui
+        environment:
+            - NODE_ENV=development
+            - FOO=bar
+#        volumes:
+#            - ~/git-source/go-workspace/src/github.com/fritogotlayed/corp-hq-ui/dist:/usr/share/nginx/html:rw
+#            - /tmp/.X11-unix:/tmp/.X11-unix:rw
+        ports:
+            - 8080:80
+        links:
+            - corp-hq-api
+        depends_on:
+            - corp-hq-api
+    corp-hq-api:
+        build: ./api
+        container_name: "corp-hq-api"
+        image: corp-hq-api:latest
+        environment:
+            - NODE_ENV=development
+            - CORP_HQ_MONGO_HOST=192.168.5.100:27017
+#        volumes:
+#            - .:/var/www:rw
+#            - /tmp/.X11-unix:/tmp/.X11-unix:rw
+        ports:
+            - 8888:80
+        links:
+            - mongodb
+    mongodb:
+        image: mongo:latest
+        container_name: "corp-hq-mongodb"
+        environment:
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/dev/null
+        volumes:
+          - /var/tmp/corp-hq-mongo-data/db:/data/db
+        ports:
+            - 27017:27017
+        command: mongod --smallfiles --logpath=/dev/null # --quiet

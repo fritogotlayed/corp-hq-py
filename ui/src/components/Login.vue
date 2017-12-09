@@ -1,0 +1,142 @@
+<template>
+  <div class="login-wrapper columns">
+    <div class="column is-offset-one-quarter is-half">
+      <div class="message is-warning" v-show="showAlert">
+        <div class="message-header">
+          <p>Alert</p>
+          <button class="delete" aria-label="delete" @click="alertMessage = ''"></button>
+        </div>
+        <div class="message-body">
+          {{ alertMessage }}
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Username</label>
+        <div class="control has-icons-right">
+          <input :class="usernameClass" type="text" placeholder="Username" v-model="username" :disabled="disableInputs == true" />
+          <span class="icon is-small is-right">
+            <i class="fa fa-user"></i>
+          </span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Password</label>
+        <div class="control has-icons-right">
+          <input :class="passwordClass" type="password" placeholder="Password" v-model="password" :disabled="disableInputs == true"/>
+          <span class="icon is-small is-right">
+            <i class="fa fa-key"></i>
+          </span>
+        </div>
+      </div>
+      <div class="field">
+        <button :class="buttonClass" @click="login">Login</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import axios from 'axios'
+  import config from '../config'
+  import helpers from '../helpers'
+
+  export default {
+    name: 'Login',
+    data () {
+      return {
+        username: '',
+        password: '',
+        disableInputs: false,
+        alertMessage: '',
+        alertUsername: false,
+        alertPassword: false
+      }
+    },
+    computed: {
+      usernameClass: function () {
+        return {
+          input: true,
+          'is-warning': this.alertUsername
+        }
+      },
+      passwordClass: function () {
+        return {
+          input: true,
+          'is-warning': this.alertPassword
+        }
+      },
+      buttonClass: function () {
+        return {
+          button: true,
+          'is-primary': true,
+          'is-pulled-right': true,
+          'is-loading': this.disableInputs
+        }
+      },
+      showAlert: function () {
+        return this.alertMessage !== ''
+      }
+    },
+    methods: {
+      login () {
+        // Validate our inputs
+        if (!this.isFormValid()) {
+          return
+        }
+
+        this.disableInputs = true
+        let baseUrl = config['corp-hq-api-url']
+        axios.post(baseUrl + 'login', {
+          un: this.username,
+          pw: this.password
+        })
+        .then((resp) => {
+          var expiry = helpers.parseISOString(resp.data.expires)
+          sessionStorage.setItem('corp-hq-api-auth-token', resp.data.token)
+          sessionStorage.setItem('corp-hq-api-auth-token-exp', expiry)
+          this.$store.commit('setToken', resp.data.token)
+          this.$store.commit('setExpiry', expiry)
+          this.disableInputs = false
+          this.$router.push({ path: this.$router.history.current.query.referrer })
+        })
+        .catch((err) => {
+          if (err.response === undefined) {
+            this.alertMessage = err.message + '; Please try again later.'
+          } else if (err.response.status === 400) {
+            this.alertMessage = 'Login failed. Please try again.'
+            this.password = ''
+          } else {
+            console.log(err)
+          }
+          this.disableInputs = false
+        })
+      },
+      isFormValid () {
+        this.resetAlerts()
+
+        if (this.username === '') {
+          this.alertMessage = 'Username is a required field.'
+          this.alertUsername = true
+          return false
+        }
+
+        if (this.password === '') {
+          this.alertMessage = 'Password is a required field.'
+          this.alertPassword = true
+          return false
+        }
+
+        return true
+      },
+      resetAlerts () {
+        this.alertMessage = ''
+        this.alertUsername = false
+        this.alertPassword = false
+      }
+    }
+  }
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+</style>
