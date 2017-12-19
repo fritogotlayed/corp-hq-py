@@ -17,15 +17,15 @@ install_reqs = [
 ]
 
 setup(
-    name='Corp-HQ-API',
+    name='Corp-HQ-job-runner',
     author='fritogotlayed',
-    description='API to drive the corp-hq-ui project',
-    url='https://github.com/fritogotlayed/corp-hq/api',
+    description='',
+    url='https://github.com/fritogotlayed/corp-hq/job-runner',
     version='0.0.1',
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
-    package_data={'api': ['config.yml']},
-    package_dir={'api': 'api'},
+    package_data={'runner': ['config.yml']},
+    package_dir={'runner': 'runner'},
     install_requires=install_reqs,
     entry_points={
         'console_scripts':
